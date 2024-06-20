@@ -1,34 +1,32 @@
 using backend.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-//Add services to the container.
-builder.Services.AddDbContext<UserDbContext>(options =>
-    //options.UseInMemoryDatabase("Test"));
+// Add services to the container.
+
+// Add DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // Cross-origin resource sharing
 builder.Services.AddCors(options => {
     options.AddPolicy("CorsPolicy",
         policy => {
-            policy.WithOrigins("https://localhost:5173")
+            policy.WithOrigins("https://localhost:3000")
                    .AllowAnyHeader()
                    .AllowAnyMethod();
         });
 });
 
-// In memory cache
+// Add memory cache
 builder.Services.AddDistributedMemoryCache();
 
-// Session
+// Add session
 builder.Services.AddSession(options => {
     options.Cookie.Name = "session";
-    options.Cookie.Path = "/";
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
@@ -36,31 +34,27 @@ builder.Services.AddSession(options => {
     options.IdleTimeout = TimeSpan.FromMinutes(20);
 });
 
-// Cookie authentication
+// Add cookie authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options => {
-        options.Cookie.Name = "auth";
-        options.LoginPath = "/login";
-        options.LogoutPath = "/logout";
+        options.Cookie.Name = "authentication";
         options.Cookie.HttpOnly = true;
         options.Cookie.IsEssential = true;
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
-        options.SlidingExpiration = true;
     });
-// Authorization
+// Add authorization
 builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 
-//Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-//Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI();

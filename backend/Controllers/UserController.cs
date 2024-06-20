@@ -8,89 +8,71 @@ namespace backend.Controllers {
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController(UserDbContext context) : ControllerBase {
-        private readonly UserDbContext _context = context;
+    public class UserController(ApplicationDbContext context) : ControllerBase {
+        private readonly ApplicationDbContext _context = context;
 
         // GET: api/User/profile
         [HttpGet("profile")]
         public async Task<ActionResult> GetUserProfile() {
-            var userID = HttpContext.Session.GetInt32("uid");
-            // Validate
-            if (userID == null) {
+            var uid = HttpContext.Session.GetInt32("uid");
+            if (uid == null) {
                 return Unauthorized("You must log in");
             }
+            // Get current user detail
             var userProfile = await _context.UserProfiles
-                                            .Where(x => x.UserID == userID)
-                                            .Select(x => new { 
-                                                x.FirstName,
-                                                x.LastName, 
-                                                x.PhoneNumber, 
-                                                x.Address
+                                            .Where(x => x.UserID == uid)
+                                            .Join(_context.Users,
+                                            o => o.UserID,
+                                            i => i.ID,
+                                            (o, i) => new {
+                                                o.FirstName,
+                                                o.LastName,
+                                                o.Address,
+                                                o.PhoneNumber,
+                                                o.Image,
+                                                i.Email
                                             })
                                             .FirstOrDefaultAsync();
-            // Validate
             if (userProfile == null) {
                 return NotFound("User not found");
             }
             return Ok(userProfile);
         }
 
-        // PUT: api/User/profile
-        [HttpPut("profile")]
-        public async Task<ActionResult> PutUserProfile(UserUpdateProfile request) {
-            var userID = HttpContext.Session.GetInt32("uid");
-            // Validate
-            if (userID == null) {
+        // PUT: api/User/update-profile
+        [HttpPut("update-profile")]
+        public async Task<ActionResult> UserUpdateProfile(UserUpdateProfile request) {
+            var uid = HttpContext.Session.GetInt32("uid");
+            if (uid == null) {
                 return Unauthorized("You must log in");
             }
-            var userProfile = await _context.UserProfiles.FindAsync(userID);
-            var user = await _context.Users.FindAsync(userID);
-            // Validate
+            var userProfile = await _context.UserProfiles.FindAsync(uid);
+            var user = await _context.Users.FindAsync(uid);
             if (userProfile == null || user == null) {
                 return NotFound("User not found.");
             }
             if (ModelState.IsValid == false) {
-                return BadRequest("Invalid profile detail");
+                return BadRequest("Invalid input");
             }
-            // Update detail
+            // Update profile
             userProfile.FirstName = request.FirstName;
             userProfile.LastName = request.LastName;
             userProfile.PhoneNumber = request.PhoneNumber;
             userProfile.Address = request.Address;
+            userProfile.Image = request.Image;
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             return Ok("Profile updated successfully.");
         }
 
-        // GET: api/User/loginDetail
-        [HttpGet("loginDetail")]
-        public async Task<ActionResult> GetUserLoginDetail() {
-            var userID = HttpContext.Session.GetInt32("uid");
-            if (userID == null) {
+        // PUT: api/User/change-password
+        [HttpPut("change-password")]
+        public async Task<ActionResult> UserChangePassword(UserChangePassword request) {
+            var uid = HttpContext.Session.GetInt32("uid");
+            if (uid == null) {
                 return Unauthorized("You must log in");
             }
-            var userLoginDetail = await _context.Users
-                                            .Where(x => x.ID == userID)
-                                            .Select(x => new {
-                                                x.Email
-                                            })
-                                            .FirstOrDefaultAsync();
-            if (userLoginDetail == null) {
-                return NotFound("User not found");
-            }
-            return Ok(userLoginDetail);
-        }
-
-        // PUT: api/User/loginDetail
-        [HttpPut("loginDetail")]
-        public async Task<ActionResult> PutUserLoginDetail(UserUpdateLoginDetail request) {
-            var userID = HttpContext.Session.GetInt32("uid");
-            // Validate
-            if (userID == null) {
-                return Unauthorized("You must log in");
-            }
-            var user = await _context.Users.FindAsync(userID);
-            // Validate
+            var user = await _context.Users.FindAsync(uid);
             if (user == null) {
                 return NotFound("User not found.");
             }
@@ -98,14 +80,13 @@ namespace backend.Controllers {
                 return BadRequest("Wrong password");
             }
             if (ModelState.IsValid == false) {
-                return BadRequest("Invalid login detail");
+                return BadRequest("Invalid input");
             }
-            // Update detail
-            user.Email = request.Email;
-            user.Password = request.NewPassword;
+            // Change password
+            user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-            return Ok("Login detail updated successfully.");
+            return Ok("Password changed successfully.");
         }
     }
 }

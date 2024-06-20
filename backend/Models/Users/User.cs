@@ -16,11 +16,19 @@ namespace backend.Models {
         [Required]
         [StringLength(255, MinimumLength = 4)]
         [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        public string Email { get; set; }
         [Required]
         [StringLength(255, MinimumLength = 8)]
-        public string Password { get; set; } = string.Empty;
+        public string Password { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public User() {
+            ID = 0;
+            Type = 0;
+            Email = "";
+            Password = "";
+            CreatedAt = DateTime.Now;
+            UpdatedAt = DateTime.Now;
+        }
     }
 }
