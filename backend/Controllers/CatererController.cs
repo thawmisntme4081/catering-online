@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
 using System.Linq;
 using System;
+using backend.Models.DTO;
 
 namespace backend.Controllers
 {

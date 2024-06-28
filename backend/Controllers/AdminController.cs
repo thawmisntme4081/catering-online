@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
 using Microsoft.AspNetCore.Authorization;
+using backend.Models.DTO;
 
 namespace backend.Controllers
 {
