@@ -7,17 +7,17 @@ namespace backend.Models
     {
         [Key]
         public int Id { get; set; }
+
         [Required]
         public int ProfileId { get; set; }
         [ForeignKey(nameof(ProfileId))]
         public Profile? Profile { get; set; }
-        public ICollection<Item> Items { get; set; }
+
         public Caterer()
         {
             Id = 0;
             ProfileId = 0;
             Profile = null;
-            Items = [];
         }
     }
 }

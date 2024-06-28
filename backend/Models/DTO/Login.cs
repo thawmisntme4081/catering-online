@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace backend.Models
+namespace backend.Models.DTO
 {
     public class Login
     {
@@ -8,9 +8,11 @@ namespace backend.Models
         [StringLength(255, MinimumLength = 4)]
         [EmailAddress]
         public string Email { get; set; }
+
         [Required]
         [StringLength(255, MinimumLength = 8)]
         public string Password { get; set; }
+
         public Login()
         {
             Email = "";
